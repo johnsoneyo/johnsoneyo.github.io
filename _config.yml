@@ -18,7 +18,7 @@ darkavatar: /assets/images/dark_bauhaus_logo.png
 tagline: A blog dedicated to opensource technical writeup of project contributions and personal adventures
 
 # A longer description used for the description meta tag. Also used as fallback for pages that don't provide their own description, and also as part of the page's title tag if neither page.title nor site.tagline has been defined.
-description: It discusses my current work in progress, things I find interesting and things I am currently learning
+description: I discuss my current work in progress, things I find interesting and things I am currently learning
 
 # The full URL to your site. Note: site.github.url will be used by default.
 url: 
