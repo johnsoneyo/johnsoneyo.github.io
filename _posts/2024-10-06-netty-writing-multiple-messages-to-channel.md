@@ -103,14 +103,12 @@ import java.util.logging.Logger;
 @Sharable
 public class HeartBeatServerHandler extends ChannelInboundHandlerAdapter {
 
-
     /**
      * @param ctx  channel handler context 
      * @param msg - raw byte buffer
      */
     @Override
-    public void channelRead(ChannelHandlerContext ctx, Object msg) {
-
+    public void channelRead(ChannelHandlerContext ctx, Object msg){
        // Todo - logic to process Object msg
        // Next steps is to obtain the executor service from the 
        // channel handler context
@@ -147,8 +145,7 @@ public class HeartBeatServerHandler extends ChannelInboundHandlerAdapter {
 
 To test this quickly we can use a telnet program to connect and send a dummpy or empty space  string to the server and we can observe that a message is sent every 5seconds.
 
-```shell
-
+```text
 ➜  heart-beat-app git:(develop) ✗ telnet localhost 8007
 
 Trying ::1...
@@ -161,3 +158,77 @@ testing scheduled message
 testing scheduled message
 testing scheduled message
 ```
+
+## Pitfall - Sending Multiple HttpContent
+
+Http protocol as we know it naturally uses TCP as its underlining protocol or backbone for communication . If we attempt to send `HttpContent` usings Nettys combined channel duplex handler `HttpServerCodec` it will provide us with an encoder `HttpContentEncoder` which cannot abide to the multiple messages concept which is explained above. Below is a simple http response wrapper buffer message to be transformed by an encoder during a write operation . 
+
+```java
+tx.channel().eventLoop()
+        .scheduleAtFixedRate(() -> {
+
+            try {
+                FullHttpResponse rsp = new DefaultFullHttpResponse(req.protocolVersion(), OK,
+                        Unpooled.wrappedBuffer(CONTENT));
+                rsp.headers()
+                        .set(CONTENT_TYPE, TEXT_PLAIN)
+                        .setInt(CONTENT_LENGTH, rsp.content().readableBytes());
+                
+              ctx.writeAndFlush(rsp).sync();
+            }catch (Exception e) {
+                e.printStackTrace();
+            }
+        }, 3, 3, TimeUnit.SECONDS);
+
+```
+
+It comes out with an error as this 
+
+```text
+io.netty.handler.codec.EncoderException: java.lang.IllegalStateException: cannot send more responses than requests
+	at io.netty.handler.codec.MessageToMessageEncoder.write(MessageToMessageEncoder.java:104)
+	at io.netty.handler.codec.MessageToMessageCodec.write(MessageToMessageCodec.java:116)
+	at io.netty.channel.AbstractChannelHandlerContext.invokeWrite0(AbstractChannelHandlerContext.java:717)
+	at io.netty.channel.AbstractChannelHandlerContext.invokeWrite(AbstractChannelHandlerContext.java:709)
+	at io.netty.channel.AbstractChannelHandlerContext.write(AbstractChannelHandlerContext.java:792)
+	at io.netty.channel.AbstractChannelHandlerContext.write(AbstractChannelHandlerContext.java:702)
+	at io.netty.channel.ChannelDuplexHandler.write(ChannelDuplexHandler.java:115)
+
+```
+
+
+```java
+
+@Override
+protected void encode(ChannelHandlerContext ctx, HttpObject msg, List<Object> out) throws Exception {
+
+    final boolean isFull = msg instanceof HttpResponse && msg instanceof LastHttpContent;
+    switch (state) {
+        case AWAIT_HEADERS: {
+            ensureHeaders(msg);
+
+            assert encoder == null;
+
+            final HttpResponse res = (HttpResponse) msg;
+            final int code = res.status().code();
+            final CharSequence acceptEncoding;
+
+            if (code == CONTINUE_CODE) {
+                // We need to not poll the encoding when response with CONTINUE as another response will follow
+
+                // for the issued request. See https://github.com/netty/netty/issues/4079
+
+                acceptEncoding = null;
+            } else {
+                // Get the list of encodings accepted by the peer.
+                acceptEncoding = acceptEncodingQueue.poll();
+                if (acceptEncoding == null) {
+                    throw new IllegalStateException("cannot send more responses than requests");
+                }
+            }
+```
+
+This is as a result of this validation in the content encoder which maintains a corresponding queue of encoding char sequences, in order words there can only be one read one write at a time in an active channel
+
+## Conclusion
+It was nice writing this article and I hope it helps demystify issues around multiple writes or push messages communicated to a peer , If any queries about Netty in general I can be reached on my [mail](mailto:johnsoneyo@gmail.com) . Peace and Love
