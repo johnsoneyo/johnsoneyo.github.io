@@ -145,7 +145,7 @@ public class HeartBeatServerHandler extends ChannelInboundHandlerAdapter {
 
 To test this quickly we can use a telnet program to connect and send a dummpy or empty space  string to the server and we can observe that a message is sent every 5seconds.
 
-```text
+```
 ➜  heart-beat-app git:(develop) ✗ telnet localhost 8007
 
 Trying ::1...
@@ -184,7 +184,7 @@ tx.channel().eventLoop()
 
 It comes out with an error as this 
 
-```text
+```
 io.netty.handler.codec.EncoderException: java.lang.IllegalStateException: cannot send more responses than requests
 	at io.netty.handler.codec.MessageToMessageEncoder.write(MessageToMessageEncoder.java:104)
 	at io.netty.handler.codec.MessageToMessageCodec.write(MessageToMessageCodec.java:116)
@@ -231,4 +231,5 @@ protected void encode(ChannelHandlerContext ctx, HttpObject msg, List<Object> ou
 This is as a result of this validation in the content encoder which maintains a corresponding queue of encoding char sequences, in order words there can only be one read one write at a time in an active channel
 
 ## Conclusion
-It was nice writing this article and I hope it helps demystify issues around multiple writes or push messages communicated to a peer , If any queries about Netty in general I can be reached on my [mail](mailto:johnsoneyo@gmail.com) . Peace and Love
+It was nice writing this article and I hope it helps demystify issues around multiple writes or push messages communicated to a peer , If any queries about Netty in general I can be reached on my [mail](mailto:johnsoneyo@gmail.com) . Peace and Love .
+
