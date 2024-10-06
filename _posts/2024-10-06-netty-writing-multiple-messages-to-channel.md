@@ -145,7 +145,7 @@ public class HeartBeatServerHandler extends ChannelInboundHandlerAdapter {
 
 To test this quickly we can use a telnet program to connect and send a dummpy or empty space  string to the server and we can observe that a message is sent every 5seconds.
 
-```
+```console
 ➜  heart-beat-app git:(develop) ✗ telnet localhost 8007
 
 Trying ::1...
@@ -184,7 +184,7 @@ tx.channel().eventLoop()
 
 It comes out with an error as this 
 
-```
+```console
 io.netty.handler.codec.EncoderException: java.lang.IllegalStateException: cannot send more responses than requests
 	at io.netty.handler.codec.MessageToMessageEncoder.write(MessageToMessageEncoder.java:104)
 	at io.netty.handler.codec.MessageToMessageCodec.write(MessageToMessageCodec.java:116)
