@@ -11,4 +11,5 @@ permalink: /portfolio/
 - [Valtech UK](https://www.valtech.com/en-gb/)
 - [Haud Asia](https://haud.com/company/)
 - [Mitigant](https://www.mitigant.io/)
+- [Discvoery](https://www.discovery.co.za/)
 - [Amelco](https://amelco.co.uk/)
